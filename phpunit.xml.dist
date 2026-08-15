@@ -27,5 +27,13 @@
         <ini name="error_reporting" value="-1"/>
         <server name="APP_ENV" value="test" force="true"/>
         <server name="SHELL_VERBOSITY" value="-1"/>
+
+        <!--
+            Fail on deprecations this bundle causes; ignore Symfony calling its own deprecated
+            APIs. Indirect notices are outside our control and vary by patch release, so
+            failing on them would turn a green build red on somebody else's release schedule
+            without telling us anything actionable.
+        -->
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[direct]=0"/>
     </php>
 </phpunit>
