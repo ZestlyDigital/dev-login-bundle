@@ -14,6 +14,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Zestly\DevLoginBundle\Identity\IdentityProviderInterface;
 use Zestly\DevLoginBundle\ZestlyDevLoginBundle;
 
 /**
@@ -34,6 +35,7 @@ final class TestKernel extends Kernel
         string $environment = 'dev',
         bool $debug = true,
         private readonly array $devLoginConfig = [],
+        private readonly bool $overrideIdentityProvider = false,
     ) {
         parent::__construct($environment, $debug);
     }
@@ -54,7 +56,7 @@ final class TestKernel extends Kernel
         // sharing a directory with a debug build silently resurrects the wrong container.
         return sys_get_temp_dir().'/zestly-dev-login/'.$this->environment.'/'
             .($this->debug ? 'debug' : 'nodebug').'/'
-            .substr(md5(serialize($this->devLoginConfig)), 0, 8).'/cache';
+            .substr(md5(serialize($this->devLoginConfig).($this->overrideIdentityProvider ? 'override' : '')), 0, 8).'/cache';
     }
 
     public function getLogDir(): string
@@ -106,6 +108,15 @@ final class TestKernel extends Kernel
         ]);
 
         $container->extension('zestly_dev_login', $this->devLoginConfig);
+
+        if ($this->overrideIdentityProvider) {
+            // Exactly how a consuming application swaps the identity list in: alias the
+            // interface to its own service. If the bundle wires its controllers to the
+            // concrete service instead of this alias, the override is silently ignored.
+            $container->services()
+                ->set(HostAwareIdentityProvider::class)
+                ->alias(IdentityProviderInterface::class, HostAwareIdentityProvider::class);
+        }
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void

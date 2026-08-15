@@ -106,6 +106,28 @@ final class DevLoginTest extends TestCase
         self::assertFalse($body['token_required']);
     }
 
+    public function testApplicationCanOverrideTheIdentityProvider(): void
+    {
+        $kernel = new TestKernel('dev', true, [
+            'identities' => [['identifier' => 'ignored@example.com', 'label' => 'Should not appear']],
+        ], overrideIdentityProvider: true);
+        $kernel->boot();
+
+        $request = Request::create('/_dev/login', 'GET', server: [
+            'REMOTE_ADDR' => '127.0.0.1',
+            'HTTP_HOST' => 'tenant-a.localhost',
+        ]);
+
+        $body = json_decode((string) $kernel->handle($request)->getContent(), true);
+
+        self::assertCount(1, $body['identities']);
+        self::assertSame(
+            'Admin on tenant-a.localhost',
+            $body['identities'][0]['label'],
+            'The application alias must win over the bundle default, and receive the Request',
+        );
+    }
+
     public function testUnknownIdentifierIs404(): void
     {
         $response = $this->handle('/_dev/login/nobody@example.com');

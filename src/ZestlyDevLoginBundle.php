@@ -140,6 +140,10 @@ final class ZestlyDevLoginBundle extends AbstractBundle
             ->args(['$identities' => $config['identities']])
         ;
 
+        // Consumers override the identity list by aliasing this interface to their own
+        // implementation. That only works if the controller and command depend on the ALIAS
+        // rather than on the concrete service below — referencing the concrete id directly
+        // makes IdentityProviderInterface look overridable while silently ignoring overrides.
         $services->alias(IdentityProviderInterface::class, 'zestly_dev_login.identity_provider')->public();
 
         $services->set('zestly_dev_login.controller.login', LoginController::class)
@@ -155,7 +159,7 @@ final class ZestlyDevLoginBundle extends AbstractBundle
 
         $services->set('zestly_dev_login.controller.discovery', DiscoveryController::class)
             ->args([
-                '$identityProvider' => new Reference('zestly_dev_login.identity_provider'),
+                '$identityProvider' => new Reference(IdentityProviderInterface::class),
                 '$guard' => new Reference('zestly_dev_login.access_guard'),
                 '$pathPrefix' => $config['path_prefix'],
             ])
@@ -164,7 +168,7 @@ final class ZestlyDevLoginBundle extends AbstractBundle
 
         $services->set('zestly_dev_login.command', DevLoginCommand::class)
             ->args([
-                '$identityProvider' => new Reference('zestly_dev_login.identity_provider'),
+                '$identityProvider' => new Reference(IdentityProviderInterface::class),
                 '$guard' => new Reference('zestly_dev_login.access_guard'),
                 '$pathPrefix' => $config['path_prefix'],
                 '$defaultScheme' => '%router.request_context.scheme%',
