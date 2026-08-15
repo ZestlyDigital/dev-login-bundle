@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Symfony Flex recipe under `recipe/`, reducing installation to `composer require --dev`.
+  Registers the bundle for `dev` only and writes both config files. Pending submission to
+  `symfony/recipes-contrib`, which requires the package to be on Packagist first.
+- Banner image in the README.
+
+### Fixed
+
+- The login controller and `dev:login` command referenced the concrete identity-provider
+  service rather than the `IdentityProviderInterface` alias, so an application that aliased
+  the interface to its own implementation was silently ignored and kept getting the
+  configured list. Both now depend on the alias, with a regression test that boots a kernel
+  overriding the interface the way a consuming application does.
+
 ## [0.1.0] - 2026-08-15
 
 Initial release.

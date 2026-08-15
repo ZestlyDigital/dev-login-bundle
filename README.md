@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://repository-images.githubusercontent.com/1334663449/611f5257-b7f9-42a8-a94a-deef120ce8bb" alt="Dev Login Bundle — the simplest way for AI agents to log in to your Symfony app. No passwords." width="100%">
+</p>
+
 # Dev Login Bundle
 
 **Log in as any user, without a password, in your Symfony dev environment.**
@@ -41,7 +45,13 @@ This is that, for Symfony, designed so an agent can drive it unattended.
 composer require --dev zestly/dev-login-bundle
 ```
 
-Register it for `dev` only:
+If you allow Symfony Flex to execute the recipe, that is the whole installation — the bundle is
+registered for `dev` only and both config files are written for you.
+
+<details>
+<summary>Installing without the recipe</summary>
+
+Register the bundle for `dev` only:
 
 ```php
 // config/bundles.php
@@ -51,8 +61,8 @@ return [
 ];
 ```
 
-Import the routes into an environment-scoped file — the directory name is what keeps these URLs
-out of your production router:
+Import the routes into an environment-scoped file. The directory name is doing real work here —
+it is what keeps these URLs out of your production router:
 
 ```yaml
 # config/routes/dev/zestly_dev_login.yaml
@@ -60,8 +70,10 @@ zestly_dev_login:
     resource: '@ZestlyDevLoginBundle/config/routes.php'
 ```
 
-That's it. No `security.yaml` changes are needed — see [Access control](#access-control) for why
-that's harder than it looks, and what the bundle does about it.
+</details>
+
+No `security.yaml` changes are needed either way — see [Access control](#access-control) for why
+that is harder than it looks, and what the bundle does about it.
 
 ## Use
 

@@ -1,0 +1,15 @@
+zestly_dev_login:
+    # Where to land after logging in. Override per request with ?target=/some/path
+    default_target: '/'
+
+    # The identities offered by GET /_dev/login and `bin/console dev:login`.
+    #
+    # This is a convenience menu, not a whitelist: any identifier your application's user
+    # provider accepts will work, and listing one here grants nothing on its own.
+    #
+    # To build the list from your fixtures, a repository, or per-subdomain in a multi-tenant
+    # app, implement Zestly\DevLoginBundle\Identity\IdentityProviderInterface and alias it —
+    # it receives the current Request.
+    identities: []
+        # - { identifier: 'admin@example.com', label: 'Admin', roles: ['ROLE_ADMIN'] }
+        # - { identifier: 'user@example.com',  label: 'Regular user' }
