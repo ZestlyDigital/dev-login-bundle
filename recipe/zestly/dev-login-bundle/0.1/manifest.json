@@ -5,7 +5,6 @@
     "copy-from-recipe": {
         "config/": "%CONFIG_DIR%/"
     },
-    "aliases": ["dev-login"],
     "post-install-output": [
         "  * Dev login is ready. Start your server and open:",
         "",
