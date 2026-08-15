@@ -36,6 +36,7 @@ final class TestKernel extends Kernel
         bool $debug = true,
         private readonly array $devLoginConfig = [],
         private readonly bool $overrideIdentityProvider = false,
+        private readonly bool $firewallWithoutAuthenticator = false,
     ) {
         parent::__construct($environment, $debug);
     }
@@ -52,11 +53,38 @@ final class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        // Debug belongs in the key: a non-debug kernel does not revalidate its container, so
-        // sharing a directory with a debug build silently resurrects the wrong container.
+        // A non-debug kernel does not revalidate its container, so anything that changes the
+        // container must change this path or the stale one is silently reused. That includes
+        // the bundle's own source: editing a constructor and re-running the suite otherwise
+        // resurrects a container wired for the previous signature, which fails as a confusing
+        // TypeError far from its cause.
+        $key = md5(serialize($this->devLoginConfig)
+            .($this->overrideIdentityProvider ? 'override' : '')
+            .($this->firewallWithoutAuthenticator ? 'noauth' : '')
+            .self::sourceFingerprint());
+
         return sys_get_temp_dir().'/zestly-dev-login/'.$this->environment.'/'
-            .($this->debug ? 'debug' : 'nodebug').'/'
-            .substr(md5(serialize($this->devLoginConfig).($this->overrideIdentityProvider ? 'override' : '')), 0, 8).'/cache';
+            .($this->debug ? 'debug' : 'nodebug').'/'.substr($key, 0, 12).'/cache';
+    }
+
+    private static function sourceFingerprint(): string
+    {
+        static $fingerprint = null;
+
+        if (null !== $fingerprint) {
+            return $fingerprint;
+        }
+
+        $newest = 0;
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(__DIR__.'/../../src'));
+
+        foreach ($files as $file) {
+            if ($file instanceof \SplFileInfo && $file->isFile()) {
+                $newest = max($newest, $file->getMTime());
+            }
+        }
+
+        return $fingerprint = (string) $newest;
     }
 
     public function getLogDir(): string
@@ -89,12 +117,14 @@ final class TestKernel extends Kernel
                     ],
                 ],
             ],
+            // A stock symfony/skeleton ships `main` with a provider and NO login mechanism,
+            // which makes Security::login() throw. Both shapes are exercised.
             'firewalls' => [
-                'main' => [
+                'main' => array_filter([
                     'lazy' => true,
                     'provider' => 'test_users',
-                    'http_basic' => true,
-                ],
+                    'http_basic' => $this->firewallWithoutAuthenticator ? null : true,
+                ]),
             ],
             // The catch-all is the point. Nearly every real application ends its access
             // rules this way, and it is what makes the naive fixes for endpoint access

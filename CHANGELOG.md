@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-15
+
+### Fixed
+
+- Logging in failed with a 500 (`No authenticators found for firewall "main"`) on any firewall
+  that declares no login mechanism — which is precisely the shape a stock `symfony/skeleton`
+  ships, so the bundle did not work on a fresh install. `Security::login()` requires the
+  firewall to have at least one authenticator; when it does not, the session token is now
+  established directly and `InteractiveLoginEvent` dispatched. Applications that do have an
+  authenticator are unaffected and keep the full login path.
+
 ## [0.1.0] - 2026-08-15
 
 Initial release.
@@ -29,5 +40,6 @@ Initial release.
   Registers the bundle for `dev` only and writes both config files. Pending submission to
   `symfony/recipes-contrib`, which requires the package to be on Packagist first.
 
-[Unreleased]: https://github.com/ZestlyDigital/dev-login-bundle/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ZestlyDigital/dev-login-bundle/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ZestlyDigital/dev-login-bundle/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ZestlyDigital/dev-login-bundle/releases/tag/v0.1.0

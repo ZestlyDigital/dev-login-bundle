@@ -128,6 +128,33 @@ final class DevLoginTest extends TestCase
         );
     }
 
+    public function testWorksOnAFirewallWithNoAuthenticator(): void
+    {
+        // The shape of a stock symfony/skeleton: a provider, no login mechanism. Before the
+        // fallback in LoginController this returned 500 "No authenticators found for firewall".
+        $kernel = new TestKernel('dev', true, [], firewallWithoutAuthenticator: true);
+        $kernel->boot();
+
+        $request = Request::create('/_dev/login/admin@example.com', 'GET', server: ['REMOTE_ADDR' => '127.0.0.1']);
+        $session = new \Symfony\Component\HttpFoundation\Session\Session(
+            new \Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage()
+        );
+        $request->setSession($session);
+
+        $response = $kernel->handle($request);
+
+        self::assertSame(302, $response->getStatusCode(), 'A skeleton firewall must still log in');
+        self::assertNotNull($session->get('_security_main'), 'The session token must still be written');
+
+        $whoami = Request::create('/whoami', 'GET', server: ['REMOTE_ADDR' => '127.0.0.1']);
+        $whoami->setSession($session);
+        $whoami->cookies->set($session->getName(), $session->getId());
+
+        $body = json_decode((string) $kernel->handle($whoami)->getContent(), true);
+
+        self::assertSame('admin@example.com', $body['identifier'], 'And the session must be usable afterwards');
+    }
+
     public function testUnknownIdentifierIs404(): void
     {
         $response = $this->handle('/_dev/login/nobody@example.com');

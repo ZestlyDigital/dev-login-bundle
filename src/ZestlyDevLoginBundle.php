@@ -151,6 +151,8 @@ final class ZestlyDevLoginBundle extends AbstractBundle
                 '$userProvider' => null, // wired by UserProviderPass
                 '$security' => new Reference('security.helper'),
                 '$guard' => new Reference('zestly_dev_login.access_guard'),
+                '$tokenStorage' => new Reference('security.token_storage'),
+                '$eventDispatcher' => new Reference('event_dispatcher'),
                 '$firewallName' => $config['firewall'],
                 '$defaultTarget' => $config['default_target'],
             ])

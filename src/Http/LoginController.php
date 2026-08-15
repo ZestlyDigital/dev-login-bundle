@@ -10,9 +10,13 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Zestly\DevLoginBundle\Security\AccessGuard;
 
 /**
@@ -34,6 +38,8 @@ final readonly class LoginController
         private UserProviderInterface $userProvider,
         private Security $security,
         private AccessGuard $guard,
+        private TokenStorageInterface $tokenStorage,
+        private EventDispatcherInterface $eventDispatcher,
         private string $firewallName,
         private string $defaultTarget,
     ) {
@@ -60,7 +66,22 @@ final readonly class LoginController
             ));
         }
 
-        $this->security->login($user, firewallName: $this->firewallName);
+        try {
+            $this->security->login($user, firewallName: $this->firewallName);
+        } catch (\LogicException) {
+            // Security::login() needs the firewall to declare at least one authenticator, and
+            // throws "No authenticators found for firewall" when it does not. A stock Symfony
+            // skeleton is exactly that case: security.yaml ships a `main` firewall with a
+            // provider and no login mechanism until you add one. Failing there would mean the
+            // bundle does not work on a fresh install, which is where it is most useful.
+            //
+            // So fall back to establishing the token directly. Applications that do have an
+            // authenticator keep the full path above, with its badge handling and
+            // LoginSuccessEvent. Catching LogicException broadly is safe here: every outcome
+            // of this method is "log this user in", so a fallback is never more permissive
+            // than the call it replaces.
+            $this->establishToken($request, $user);
+        }
 
         if ($this->wantsJson($request)) {
             return new JsonResponse([
@@ -72,6 +93,22 @@ final readonly class LoginController
         }
 
         return new RedirectResponse($this->resolveTarget($request));
+    }
+
+    /**
+     * Log in without an authenticator.
+     *
+     * Setting the token is enough to persist the session: this request is handled by the
+     * firewall, so its ContextListener writes the token to the session on response, exactly
+     * as it would after a form login. InteractiveLoginEvent is dispatched so application
+     * listeners that react to a login still run.
+     */
+    private function establishToken(Request $request, UserInterface $user): void
+    {
+        $token = new UsernamePasswordToken($user, $this->firewallName, $user->getRoles());
+
+        $this->tokenStorage->setToken($token);
+        $this->eventDispatcher->dispatch(new InteractiveLoginEvent($request, $token));
     }
 
     /**
