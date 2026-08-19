@@ -15,9 +15,14 @@ files, so there is no manual `bundles.php` edit and no routes import to remember
 zestly/dev-login-bundle/0.1/
 ├── manifest.json
 └── config/
-    ├── packages/dev/zestly_dev_login.yaml
-    └── routes/dev/zestly_dev_login.yaml
+    ├── packages/zestly_dev_login.yaml
+    └── routes/zestly_dev_login.yaml
 ```
+
+Both files scope themselves with a `when@dev:` block rather than living in a `config/*/dev/`
+directory. The two are equivalent in effect, but `when@dev:` is the current convention — the
+env-scoped directory is the older approach, and a reviewer on the recipes-contrib PR flagged it
+as such. Keep new files in this shape.
 
 `0.1` is the *minimum* version the recipe applies to, not an exact match — it keeps applying
 to later releases until a higher-numbered directory supersedes it. Add a new directory only

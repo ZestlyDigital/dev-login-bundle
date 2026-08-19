@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Flex recipe now writes flat `config/packages/zestly_dev_login.yaml` and
+  `config/routes/zestly_dev_login.yaml` scoped with `when@dev:`, instead of files inside
+  `config/*/dev/` directories. Equivalent in effect — the routes still do not exist outside
+  dev — but `when@dev:` is the current Symfony convention, as noted on the recipes-contrib
+  review. Documentation updated to match; applications already installed with the previous
+  recipe need no change.
+
 ## [0.1.1] - 2026-08-15
 
 ### Fixed
