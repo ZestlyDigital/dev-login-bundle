@@ -25,8 +25,8 @@ use Zestly\DevLoginBundle\Security\AccessGuard;
  *
  *   1. Container    — outside `allowed_envs` this extension registers NOTHING. No services,
  *                     no controllers, no command. There is no code path to reach.
- *   2. Routing      — routes are imported by the host app from config/routes/dev/, so the
- *                     URLs do not exist in a production router at all.
+ *   2. Routing      — routes are imported by the host app under `when@dev:`, so the URLs do
+ *                     not exist in a production router at all.
  *   3. Network      — AccessGuard rejects any request from outside `allowed_ips`
  *                     (loopback + RFC1918 by default).
  *   4. Runtime      — AccessGuard re-checks the environment on every single request and

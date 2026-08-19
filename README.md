@@ -61,14 +61,17 @@ return [
 ];
 ```
 
-Import the routes into an environment-scoped file. The directory name is doing real work here —
-it is what keeps these URLs out of your production router:
+Import the routes behind a `when@dev:` guard. That guard is doing real work here — it is what
+keeps these URLs out of your production router:
 
 ```yaml
-# config/routes/dev/zestly_dev_login.yaml
-zestly_dev_login:
-    resource: '@ZestlyDevLoginBundle/config/routes.php'
+# config/routes/zestly_dev_login.yaml
+when@dev:
+    zestly_dev_login:
+        resource: '@ZestlyDevLoginBundle/config/routes.php'
 ```
+
+(An env-scoped `config/routes/dev/` directory achieves the same thing if you prefer it.)
 
 </details>
 
@@ -115,11 +118,12 @@ curl -s localhost:8000/_dev/login | jq
 Declare the menu in config:
 
 ```yaml
-# config/packages/dev/zestly_dev_login.yaml
-zestly_dev_login:
-    identities:
-        - { identifier: 'admin@example.com',     label: 'Admin',     roles: ['ROLE_ADMIN'] }
-        - { identifier: 'requestor@example.com', label: 'Requestor', description: 'Sees only their own tickets' }
+# config/packages/zestly_dev_login.yaml
+when@dev:
+    zestly_dev_login:
+        identities:
+            - { identifier: 'admin@example.com',     label: 'Admin',     roles: ['ROLE_ADMIN'] }
+            - { identifier: 'requestor@example.com', label: 'Requestor', description: 'Sees only their own tickets' }
 ```
 
 Or serve it from your fixtures, a repository, or per-subdomain, by implementing
@@ -146,7 +150,7 @@ between it and anything that isn't your laptop. Each one is sufficient on its ow
 | # | Gate | What it does |
 |---|------|--------------|
 | 1 | **Container** | Outside `allowed_envs`, the extension registers *nothing* — no services, no controllers, no command. There is no code to reach. |
-| 2 | **Routing** | Routes are imported by your app from `config/routes/dev/`, so a production router never learns the paths exist. |
+| 2 | **Routing** | Routes are imported by your app under `when@dev:`, so a production router never learns the paths exist. |
 | 3 | **Network** | Requests from outside `allowed_ips` (loopback + RFC1918 by default) are rejected. |
 | 4 | **Runtime** | The environment and debug flag are re-checked on every request and every command invocation. |
 
