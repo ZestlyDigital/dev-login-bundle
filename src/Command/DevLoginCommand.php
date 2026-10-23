@@ -11,6 +11,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Routing\RequestContext;
 use Zestly\DevLoginBundle\Identity\IdentityProviderInterface;
 use Zestly\DevLoginBundle\Security\AccessGuard;
 
@@ -32,8 +33,7 @@ final class DevLoginCommand extends Command
         private readonly IdentityProviderInterface $identityProvider,
         private readonly AccessGuard $guard,
         private readonly string $pathPrefix,
-        private readonly string $defaultScheme = 'http',
-        private readonly string $defaultHost = 'localhost',
+        private readonly ?RequestContext $requestContext = null,
     ) {
         parent::__construct();
     }
@@ -42,8 +42,8 @@ final class DevLoginCommand extends Command
     {
         $this
             ->addArgument('identifier', InputArgument::OPTIONAL, 'User identifier to log in as. Omit to list known identities.')
-            ->addOption('host', null, InputOption::VALUE_REQUIRED, 'Host to build the URL for', $this->defaultHost)
-            ->addOption('scheme', null, InputOption::VALUE_REQUIRED, 'URL scheme', $this->defaultScheme)
+            ->addOption('host', null, InputOption::VALUE_REQUIRED, 'Host to build the URL for', $this->requestContext?->getHost() ?: 'localhost')
+            ->addOption('scheme', null, InputOption::VALUE_REQUIRED, 'URL scheme', $this->requestContext?->getScheme() ?: 'http')
             ->addOption('target', null, InputOption::VALUE_REQUIRED, 'Path to land on after login')
             ->addOption('token', null, InputOption::VALUE_REQUIRED, 'Shared secret, if zestly_dev_login.secret is set')
             ->setHelp(<<<'HELP'

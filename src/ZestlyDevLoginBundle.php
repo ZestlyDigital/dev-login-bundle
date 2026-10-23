@@ -6,6 +6,7 @@ namespace Zestly\DevLoginBundle;
 
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
@@ -173,8 +174,10 @@ final class ZestlyDevLoginBundle extends AbstractBundle
                 '$identityProvider' => new Reference(IdentityProviderInterface::class),
                 '$guard' => new Reference('zestly_dev_login.access_guard'),
                 '$pathPrefix' => $config['path_prefix'],
-                '$defaultScheme' => '%router.request_context.scheme%',
-                '$defaultHost' => '%router.request_context.host%',
+                // The service rather than the router.request_context.{scheme,host} parameters:
+                // those are deprecated since Symfony 8.1, and the service also reflects
+                // framework.router.default_uri.
+                '$requestContext' => new Reference('router.request_context', ContainerInterface::IGNORE_ON_INVALID_REFERENCE),
             ])
             ->tag('console.command')
         ;
