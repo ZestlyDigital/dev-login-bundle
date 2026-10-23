@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dev — but `when@dev:` is the current Symfony convention, as noted on the recipes-contrib
   review. Documentation updated to match; applications already installed with the previous
   recipe need no change.
+- Development-only files (`tests/`, `recipe/`, `.github/`, `.git*`, PHPStan and PHPUnit
+  config) are now marked `export-ignore`, so they are no longer shipped in the Composer dist
+  archive.
 
 ## [0.1.1] - 2026-08-15
 
