@@ -37,6 +37,7 @@ final class TestKernel extends Kernel
         private readonly array $devLoginConfig = [],
         private readonly bool $overrideIdentityProvider = false,
         private readonly bool $firewallWithoutAuthenticator = false,
+        private readonly ?string $defaultUri = null,
     ) {
         parent::__construct($environment, $debug);
     }
@@ -61,6 +62,7 @@ final class TestKernel extends Kernel
         $key = md5(serialize($this->devLoginConfig)
             .($this->overrideIdentityProvider ? 'override' : '')
             .($this->firewallWithoutAuthenticator ? 'noauth' : '')
+            .$this->defaultUri
             .self::sourceFingerprint());
 
         return sys_get_temp_dir().'/zestly-dev-login/'.$this->environment.'/'
@@ -100,7 +102,7 @@ final class TestKernel extends Kernel
             'http_method_override' => false,
             'php_errors' => ['log' => true],
             'session' => ['storage_factory_id' => 'session.storage.factory.mock_file'],
-            'router' => ['utf8' => true],
+            'router' => array_filter(['utf8' => true, 'default_uri' => $this->defaultUri]),
         ]);
 
         $container->extension('security', [
